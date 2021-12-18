@@ -2,7 +2,7 @@
 #include <fstream>
 #include <vector>
 
-#define SIMPLEDATA_VERSION "1.0"
+#define SIMPLEDATA_VERSION "1.1"
 
 #include "parser.hpp"
 std::vector<storage> identifiers;
