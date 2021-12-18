@@ -94,6 +94,11 @@ int main(int charc, char** charv)
                     error("Expected non-whitespace character on line " + std::to_string(current_line) + ", column " + std::to_string(i + 1), errors);
                     continue;
                 }
+                else if (identifier[i] == '+')
+                {
+                    error("Invalid character in identifier, \'+\' not allowed on line " + std::to_string(current_line) + ", column " + std::to_string(i + 1), errors);
+                    continue;
+                }
             }
 
             // Copy the line to the value starting from the end of the identifier + 2
@@ -129,12 +134,6 @@ int main(int charc, char** charv)
                          * in a future version.
                         */
                         for (; i < value.size() && value[i] != '#'; i++);
-
-                        if (value[i] == '#')
-                        {
-                            error("Comments after values are not supported. This will be fixed in the next version. Line " + std::to_string(current_line) + ".", errors);
-                            continue;
-                        }
                     }
                 }
                 break;
@@ -157,12 +156,6 @@ int main(int charc, char** charv)
 
                     // Once again, checking for comments after the value. This is simply a stopgap solution.
                     for (; end < value.size() && value[end] != '#'; end++);
-
-                    if (value[end] == '#')
-                    {
-                        error("Comments after values are not supported. This will be fixed in the next version. Line " + std::to_string(current_line) + ".", errors);
-                        continue;
-                    }
                 }
                 break;
                 default:
@@ -170,12 +163,6 @@ int main(int charc, char** charv)
                     // Checking for comments
                     int i = 0;
                     for (; i < value.size() && value[i] != '#'; i++);
-
-                    if (value[i] == '#')
-                    {
-                        error("Comments after values are not supported. This will be fixed in the next version. Line " + std::to_string(current_line) + ".", errors);
-                        continue;
-                    }
 
                     if (value[0] >= '0' && value[0] <= '9')
                     {
