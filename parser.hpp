@@ -2,6 +2,8 @@
 #include <string>
 #include <iostream>
 
+#include <array>
+
 struct storage
 {
     std::string identifier;
@@ -37,4 +39,13 @@ void remove_trailing(std::string& string)
     // Copy the string to the destination
     for (int i = 0; i != end + 1; i++) buffer += string[i];
     string = buffer;
+}
+
+namespace restricted
+{
+    const std::array<std::string, 7> python = {"None", "str", "int", "bool", "def", "async"};
+    const std::array<std::string, 8> cpp = {"bool", "std::string", "char", "typedef", "int", "default", "float", "double"};
+
+    const std::array<std::string, 7> dfault = {"boolean", "bool", "float", "int", "integer", "string", "char"};
+    std::string lang;
 }
