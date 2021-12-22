@@ -2,7 +2,7 @@
 #include <fstream>
 #include <vector>
 
-#define SIMPLEDATA_VERSION "1.1"
+#define SIMPLEDATA_VERSION "2.0"
 
 #include "parser.hpp"
 std::vector<storage> identifiers;
@@ -21,6 +21,9 @@ int main(int charc, char** charv)
         std::cout << "SimpleData Version " << SIMPLEDATA_VERSION << "\n";
         return 0;
     }
+
+    // Language-specific identifier restrictions
+    if (charc >= 3) restricted::lang = charv[2];
 
     std::ifstream file(charv[1]);
     if (file == NULL)
@@ -80,11 +83,45 @@ int main(int charc, char** charv)
             remove_leading(identifier);
             remove_trailing(identifier);
 
-            // Check for any reserved names
-            if (identifier == "boolean" || identifier == "bool" || identifier == "float" || identifier == "int" || identifier == "integer" || identifier == "string" || identifier == "char" || identifier == "null" || identifier == "NULL")
+            if (identifier == "null" || identifier == "NULL")
             {
                 error("Reserved identifier used on line " + std::to_string(current_line), errors);
                 continue;
+            }
+
+            // Check for any reserved names
+            if (restricted::lang == "python")
+            {
+                for (int i = 0; i < restricted::python.size(); i++)
+                {
+                    if (identifier == restricted::python[i])
+                    {
+                        error("Reserved identifier used on line " + std::to_string(current_line), errors);
+                        goto outside;
+                    }
+                }
+            }
+            else if (restricted::lang == "cpp")
+            {
+                for (int i = 0; i < restricted::cpp.size(); i++)
+                {
+                    if (identifier == restricted::cpp[i])
+                    {
+                        error("Reserved identifier used on line " + std::to_string(current_line), errors);
+                        goto outside;
+                    }
+                }
+            }
+            else
+            {
+                for (int i = 0; i < restricted::dfault.size(); i++)
+                {
+                    if (identifier == restricted::dfault[i])
+                    {
+                        error("Reserved identifier used on line " + std::to_string(current_line), errors);
+                        goto outside;
+                    }
+                }
             }
 
             for (int i = 0; i < identifier.size(); i++)
@@ -126,14 +163,6 @@ int main(int charc, char** charv)
                             error("Invalid value on line " + std::to_string(current_line) + ", expected closing '\"'", errors);
                             continue;
                         }
-
-                        /**
-                         * Checking for comments after the value
-                         * This is not supported in the API and currently I
-                         * cannot be bothered to fix that however I may do so
-                         * in a future version.
-                        */
-                        for (; i < value.size() && value[i] != '#'; i++);
                     }
                 }
                 break;
@@ -153,9 +182,6 @@ int main(int charc, char** charv)
                         error("Invalid value on line " + std::to_string(current_line) + ", extra characters in a one-character type", errors);
                         continue;
                     }
-
-                    // Once again, checking for comments after the value. This is simply a stopgap solution.
-                    for (; end < value.size() && value[end] != '#'; end++);
                 }
                 break;
                 default:
