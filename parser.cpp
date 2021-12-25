@@ -2,7 +2,7 @@
 #include <fstream>
 #include <vector>
 
-#define SIMPLEDATA_VERSION "2.0"
+#define SIMPLEDATA_VERSION "2.1"
 
 #include "parser.hpp"
 std::vector<storage> identifiers;
@@ -10,10 +10,15 @@ std::vector<storage> identifiers;
 int errors = 0;
 int main(int charc, char** charv)
 {
-    if (charc < 2)
+    if (charc < 2 || (charc >= 2 && strcmp(charv[1], "-h") == 0))
     {
-        std::cout << "simpledata: [ERROR]: No arguments provided!\n";
-        return -1;
+        if (charc < 2) std::cout << "simpledata: [ERROR]: No arguments provided!\n\n";
+
+        std::cout << "Usage:\n";
+        std::cout << "\tEither a valid SimpleData file or -v or -h may be passed to the parser.\n";
+        std::cout << "\t-h displays this message, and -v gives the parser's version number.\n";
+
+        return 0;
     }
 
     if (strcmp(charv[1], "-v") == 0)
