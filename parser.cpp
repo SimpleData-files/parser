@@ -2,7 +2,7 @@
 #include <fstream>
 #include <vector>
 
-#define SIMPLEDATA_VERSION "2.1"
+#define SIMPLEDATA_VERSION "2.2"
 
 #include "parser.hpp"
 std::vector<storage> identifiers;
@@ -12,11 +12,22 @@ int main(int charc, char** charv)
 {
     if (charc < 2 || (charc >= 2 && strcmp(charv[1], "-h") == 0))
     {
-        if (charc < 2) std::cout << "simpledata: [ERROR]: No arguments provided!\n\n";
-
         std::cout << "Usage:\n";
-        std::cout << "\tEither a valid SimpleData file or -v or -h may be passed to the parser.\n";
-        std::cout << "\t-h displays this message, and -v gives the parser's version number.\n";
+        std::cout << "\t" << charv[0] << " -hv\n\n";
+
+        std::cout << "\t- The -h argument displays this message,\n";
+        std::cout << "\t- and the -v argument prints the version number of the parser\n\n";
+
+        std::cout << "\t" << charv[0] << " filename\n\n";
+
+        std::cout << "\t- The filename passed must be a valid SimpleData file\n";
+        std::cout << "\t- with a .simpdat extension and will be the file parsed\n\n";
+
+        std::cout << "\t" << charv[0] << " filename language\n\n";
+
+        std::cout << "\t- The language passed will govern what identifier restrictions\n";
+        std::cout << "\t- will be enforced\n";
+        std::cout << "\t- Language-specific keywords will be looked for and flagged\n";
 
         return 0;
     }
