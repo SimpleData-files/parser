@@ -4,6 +4,8 @@
 
 #include <array>
 
+#define SIMPLEDATA_VERSION "3.0"
+
 struct storage
 {
     std::string identifier;
@@ -43,9 +45,16 @@ void remove_trailing(std::string& string)
 
 namespace restricted
 {
+    std::vector<std::vector<std::string> > supported;
+
     const std::array<std::string, 7> python = {"None", "str", "int", "bool", "def", "async"};
     const std::array<std::string, 8> cpp = {"bool", "std::string", "char", "typedef", "int", "default", "float", "double"};
 
     const std::array<std::string, 7> dfault = {"boolean", "bool", "float", "int", "integer", "string", "char"};
-    std::string lang;
+    std::string input = "", lang = "Default";
+};
+
+inline void restricted_init()
+{
+    restricted::supported.insert(restricted::supported.end(), {{"c++", "C++", "cpp", "CPP", "cxx", "CXX"}, {"python", "PYTHON", "python3", "PYTHON3", "py", "PY"}});
 }
