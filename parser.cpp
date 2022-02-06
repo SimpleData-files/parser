@@ -2,8 +2,6 @@
 #include <fstream>
 #include <vector>
 
-#define SIMPLEDATA_VERSION "2.2"
-
 #include "parser.hpp"
 std::vector<storage> identifiers;
 
@@ -38,11 +36,38 @@ int main(int charc, char** charv)
         return 0;
     }
 
+    // Add elements to the "restricted::supported" array
+    restricted_init();
+
     // Language-specific identifier restrictions
-    if (charc >= 3) restricted::lang = charv[2];
+    if (charc >= 3) restricted::input = charv[2];
+
+    // Identifying the language inputted - spits out warning if inputted language is not supported
+    for (int i = 0; i < restricted::supported.size(); i++)
+    {
+        for (int j = 0; j < restricted::supported[i].size(); j++)
+        {
+            if (restricted::input == restricted::supported[i][j])
+            {
+                switch (i)
+                {
+                    case 0:
+                        restricted::lang = "C++";
+                        std::cout << "simpledata: [INFO]: Enforcing C++ identifier restrictions\n";
+                    break;
+                    case 1:
+                        restricted::lang = "Python";
+                        std::cout << "simpledata: [INFO]: Enforcing Python identifier restrictions\n";
+                    break;
+                }
+            }
+        }
+    }
+    if (restricted::input != "" && restricted::lang == "Default") std::cout << "simpledata: [WARNING]: Inputted language unknown, default restrictions will be enforced\n";
+    else if (restricted::lang == "Default") std::cout << "simpledata: [INFO]: Enforcing default identifier restrictions\n";
 
     std::ifstream file(charv[1]);
-    if (file == NULL)
+    if (!file.is_open())
     {
         file.close();
         std::cout << "simpledata: [ERROR]: File invalid!\n";
@@ -106,22 +131,22 @@ int main(int charc, char** charv)
             }
 
             // Check for any reserved names
-            if (restricted::lang == "python")
+            if (restricted::lang == "C++")
             {
-                for (int i = 0; i < restricted::python.size(); i++)
+                for (int i = 0; i < restricted::cpp.size(); i++)
                 {
-                    if (identifier == restricted::python[i])
+                    if (identifier == restricted::cpp[i])
                     {
                         error("Reserved identifier used on line " + std::to_string(current_line), errors);
                         goto outside;
                     }
                 }
             }
-            else if (restricted::lang == "cpp")
+            else if (restricted::lang == "Python")
             {
-                for (int i = 0; i < restricted::cpp.size(); i++)
+                for (int i = 0; i < restricted::python.size(); i++)
                 {
-                    if (identifier == restricted::cpp[i])
+                    if (identifier == restricted::python[i])
                     {
                         error("Reserved identifier used on line " + std::to_string(current_line), errors);
                         goto outside;
@@ -200,6 +225,123 @@ int main(int charc, char** charv)
                     }
                 }
                 break;
+                case '[':
+                {
+                    // Getting the elements of the list and put them into a vector to be checked
+                    std::vector<std::string> elements;
+                    for (int i = 1; i < value.size();)
+                    {
+                        int j = i;
+                        std::string element = "";
+                        for (; j < value.size() && value[j] != ','; j++)
+                        {
+                            element += value[j];
+                        }
+
+                        remove_leading(element);
+                        remove_trailing(element);
+
+                        elements.push_back(element);
+
+                        i = j + 1;
+                    }
+
+                    int i;
+                    for (i = 0; i < elements.size(); i++)
+                    {
+                        // Checking all the individual elements of the list
+                        switch (elements[i][0])
+                        {
+                            case '\"':
+                            {
+                                int j = 1;
+                                for (; j < elements[i].size() && elements[i][j] != '\"'; j++);
+
+                                if (elements[i][j] != '\"')
+                                {
+                                    error("Invalid value on line " + std::to_string(current_line) + ", element #" + std::to_string(i + 1) + ". expected closing '\"'", errors);
+                                }
+
+                                // Exit the array if the value ends
+                                if (j < elements[i].size())
+                                {
+                                    for (; j < elements[i].size(); j++)
+                                    {
+                                        if (elements[i][j] == ']') goto outside;
+                                    }
+                                }
+                            }
+                            break;
+                            case '\'':
+                            {
+                                int j = 1;
+                                for (; j < elements[i].size() && elements[i][j] != '\''; j++);
+
+                                if (elements[i][j] != '\'')
+                                {
+                                    error("Invalid value on line " + std::to_string(current_line) + ", element #" + std::to_string(i + 1) + ". expected closing '\''", errors);
+                                }
+                                else if (j != 2)
+                                {
+                                    error("Invalid value on line " + std::to_string(current_line) + ", element #" + std::to_string(i + 1) + ". extra characters in one-character type", errors);
+                                }
+
+                                if (j < elements[i].size())
+                                {
+                                    for (; j < elements[i].size(); j++)
+                                    {
+                                        if (elements[i][j] == ']') goto outside;
+                                    }
+                                }
+                            }
+                            break;
+                            default:
+                            {
+                                int j;
+                                if (elements[i][0] >= '0' && elements[i][0] <= '9')
+                                {
+                                    int decimal_points = 0;
+                                    for (j = 1; j < elements[i].size() && elements[i][j] != ']'; j++)
+                                    {
+                                        if (elements[i][j] == '.')
+                                        {
+                                            decimal_points++;
+                                        }
+                                        else if (!(elements[i][j] >= '0' && elements[i][j] <= '9'))
+                                        {
+                                            error("Invalid value on line " + std::to_string(current_line) + ", element #" + std::to_string(i + 1) + ". expected a numeric value or '.'", errors);
+                                        }
+                                    }
+                                    if (decimal_points > 1)
+                                    {
+                                        error("Invalid value on line " + std::to_string(current_line) + ", element #" + std::to_string(i + 1) + ". excessive decimal points", errors);
+                                    }
+                                }
+                                else
+                                {
+                                    std::string actual_value = "";
+                                    for (j = 0; j < elements[i].size(); j++)
+                                    {
+                                        if (elements[i][j] == ']') break;
+                                        else actual_value += elements[i][j];
+                                    }
+
+                                    if (actual_value != "true" && actual_value != "false" && actual_value != "null" && actual_value != "NULL")
+                                    {   
+                                        error("Invalid value on line " + std::to_string(current_line) + ", element #" + std::to_string(i + 1) + ". type cannot be identified", errors);
+                                    }
+                                    if (elements[i][j] == ']') goto outside;
+                                }
+                            }
+                        }
+                    }
+
+                    if (i == elements.size())
+                    {
+                        error("Invalud value on line " + std::to_string(current_line) + ", unterminated array", errors);
+                    }
+                }
+                break;
                 default:
                 {
                     // Checking for comments
@@ -258,7 +400,7 @@ int main(int charc, char** charv)
             }
         }
         outside:
-            continue; // Only here for readability - not actually needed but has no negative impact on performance
+            continue;
     }
     file.close();
     std::cout << "simpledata: Finished with " << errors << " error\\s.\n";
